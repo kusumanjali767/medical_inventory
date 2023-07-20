@@ -94,71 +94,102 @@ app.get("/logout",(req,res)=>{
    })
 });
 app.post("/drugs",async(req,res)=>{
-   const {drug,sheet,lastTablet,tabletsOnSheet}=req.body;
+   let {drug,sheet,extraTablet,tabletsOnSheet}=req.body;
    let drugs=await  Drug.findOne({drug});
    if(drugs) return res.json({
     success:false,
     message:"Drug exist Update its count",
    });
-   drugs=await Drug.create({drug,sheet,lastTablet,tabletsOnSheet});
+   sheet=Math.floor((extraTablet/tabletsOnSheet))+(sheet);
+   extraTablet=extraTablet%tabletsOnSheet;
+   drugs=await Drug.create({drug,sheet,extraTablet,tabletsOnSheet});
    res.json({
     success:true,
     message:"Successfully Added",
-   })
+   });
 });
 app.get("/getDrug",async(req,res)=>{
-   let {drug,numberOfSheets,extratablets}=req.body;
-   const drugs=await Drug.findOne({drug});
+   let {drugrequired,numberOfSheets,extratabletsrequired}=req.body;
+   const drugs= await Drug.findOne({drug:drugrequired});
     if(!drugs) return res.json({
         success:false,
         Message:"reqired drug is not there",
     });
-    let sheets=drugs.sheet;
+    let sheets=drugs.sheet;// sheets present
     const  fixed=drugs.tabletsOnSheet;
-    let lastTablets=drugs.lastTablet;
-   if(sheets<1) return res.json({
+    let extraTablets=drugs.extraTablet;//extraTablets present
+   if(sheets<1 &&  extratabletsrequired>extraTablets) return res.json({
     success:false,
-    Message:"Need to update drug",
+    Message:"Drug Not there",
    });
    if(numberOfSheets>sheets) return res.json({
     success:false,
     Message:`${sheets} are there`,
    });
-    numberOfSheets=(extratablets/fixed)+numberOfSheets;
-    extratablets=extratablets%fixed;
+    numberOfSheets=Math.floor((extratabletsrequired/fixed))+(+numberOfSheets);
+    extratabletsrequired=extratabletsrequired%fixed;
         if(numberOfSheets>sheets) return res.json({
             success:false,
             message:`${sheets} sheets are there`,
         });
-        if((numberOfSheets<sheets) && (extratablets<lastTablets)){
-           Drug.updateOne({"sheet":sheets},{$Set:{"sheet":(sheets-numberOfSheets)}});
-            Drug.updateOne({"lastTablet":lastTablets},{$Set:{"lastTablet":(lastTablets-extratablets)}});
+        if((numberOfSheets<sheets) && (extratabletsrequired<extraTablets)){
+          await Drug.updateOne({drug:drugrequired},{$set:{sheet:(sheets-numberOfSheets)}});
+            await Drug.updateOne({drug:drugrequired},{$set:{extraTablet:(extraTablets-extratabletsrequired)}});
         return res.json({
             success:true,
             message:"success",
         })};
-        if(numberOfSheets<sheets && extratablets==lastTablets){
-        Drug.updateOne({"sheet":sheets},{$Set:{"sheet":(sheets-numberOfSheets)+1}});
-        Drug.updateOne({"lastTablet":lastTablets},{$Set:{"lastTablet":fixed}});
-        return res.json({
-            success:true,
-            message:"as",
-        })};
-        if(numberOfSheets===sheets && extratablets<=lastTablets){
-            Drug.updateOne({"sheet":sheets},{$Set:{"sheet":(numberOfSheets-sheets)}});
-            Drug.updateOne({"lastTablet":lastTablets},{$Set:{"lastTablet":extratablets-lastTablets}});
+        if((numberOfSheets<sheets) && (extratabletsrequired>extraTablets)){
+            await  Drug.updateOne({drug:drugrequired},{$set:{sheet:(sheets-numberOfSheets)-1}});
+            await Drug.updateOne({drug:drugrequired},{$set:{extraTablet:fixed-(extratabletsrequired-extraTablets)}});
             return res.json({
                 success:true,
-                message:"fs",
-            });
+                message:"success",
+            })
         };
-
+        if((numberOfSheets<sheets) && (extratabletsrequired===extraTablets)){
+       await  Drug.updateOne({drug:drugrequired},{$set:{sheet:(sheets-numberOfSheets)}});
+        await Drug.updateOne({drug:drugrequired},{$set:{extraTablet:extraTablets-extratabletsrequired}});
+        return res.json({
+            sucess:true,
+            message:'success',
+        });
+       };
+         if(numberOfSheets===sheets && extratabletsrequired===extraTablets){
+                await Drug.updateOne({drug:drugrequired},{$set:{sheet:0}});
+                await Drug.updateOne({drug:drugrequired},{$set:{extraTablet:0}});
+                return res.json({
+                    success:true,
+                    message:"success",
+                })
+            };
+         if(numberOfSheets===sheets && extratabletsrequired>extraTablets){
+            return res.json({
+                success:false,
+                message:`${sheets} are there`,
+            })
+        };
+        if(numberOfSheets===sheets && extratabletsrequired<extraTablets){
+            await Drug.updateOne({drug:drugrequired},{$set:{sheet:0}});
+            await Drug.updateOne({drug:drugrequired},{$set:{extraTablet:(extraTablets-extratabletsrequired)}});
+            return res.json({
+                success:true,
+                message:"ha",
+            })
+        };
 });
-/*app.put("/update",async(req,res)=>{
-  const {sheet,lastTablet,tabletsOnSheet}=req.body;
-  const drugs=await Drug.update({});
-
-});*/
+app.put("/update",async(req,res)=>{
+    let {drug,sheet,extraTablet,tabletsOnSheet}=req.body;
+    sheet=Math.floor((extraTablet/tabletsOnSheet))+(+sheet);
+    extraTablet=extraTablet%tabletsOnSheet;
+    await Drug.updateOne({drug:drug},{$set:{tabletsOnSheet:tabletsOnSheet}});
+    await Drug.updateOne({drug:drug},{$set:{sheet:sheet}});
+    await Drug.updateOne({drug:drug},{$set:{extraTablet:extraTablet}});
+    return res.json({
+        success:true,
+        message:" Updated Successfully",
+    })
+});
 app.delete("/delete",async(req,res)=>{
     const {drug}=req.body;
   const drugs=await Drug.deleteOne({drug})

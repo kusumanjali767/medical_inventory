@@ -9,7 +9,7 @@ const schema=mongoose.Schema({
     type:Number,
     required:true,
   },
-  lastTablet:{
+  extraTablet:{
     type:Number,
     required:true,
   },
@@ -22,4 +22,4 @@ const schema=mongoose.Schema({
       default:Date.now,
   }
 });
-export const Drug =mongoose.model("Drug",schema);
+export let Drug =mongoose.model("Drug",schema);
