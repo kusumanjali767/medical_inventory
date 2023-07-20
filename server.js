@@ -99,7 +99,7 @@ app.post("/drugs",async(req,res)=>{
    if(drugs) return res.json({
     success:false,
     message:"Drug exist Update its count",
-   });
+   }); 
    sheet=Math.floor((extraTablet/tabletsOnSheet))+(sheet);
    extraTablet=extraTablet%tabletsOnSheet;
    drugs=await Drug.create({drug,sheet,extraTablet,tabletsOnSheet});
@@ -132,50 +132,55 @@ app.get("/getDrug",async(req,res)=>{
             success:false,
             message:`${sheets} sheets are there`,
         });
-        if((numberOfSheets<sheets) && (extratabletsrequired<extraTablets)){
-          await Drug.updateOne({drug:drugrequired},{$set:{sheet:(sheets-numberOfSheets)}});
-            await Drug.updateOne({drug:drugrequired},{$set:{extraTablet:(extraTablets-extratabletsrequired)}});
-        return res.json({
-            success:true,
-            message:"success",
-        })};
-        if((numberOfSheets<sheets) && (extratabletsrequired>extraTablets)){
-            await  Drug.updateOne({drug:drugrequired},{$set:{sheet:(sheets-numberOfSheets)-1}});
-            await Drug.updateOne({drug:drugrequired},{$set:{extraTablet:fixed-(extratabletsrequired-extraTablets)}});
+        if((numberOfSheets<sheets)){
+            if(extratabletsrequired<extraTablets){
+                await Drug.updateOne({drug:drugrequired},{$set:{sheet:(sheets-numberOfSheets)}});
+                await Drug.updateOne({drug:drugrequired},{$set:{extraTablet:(extraTablets-extratabletsrequired)}});
             return res.json({
-                success:true,
+                success:true,  
                 message:"success",
-            })
-        };
-        if((numberOfSheets<sheets) && (extratabletsrequired===extraTablets)){
-       await  Drug.updateOne({drug:drugrequired},{$set:{sheet:(sheets-numberOfSheets)}});
-        await Drug.updateOne({drug:drugrequired},{$set:{extraTablet:extraTablets-extratabletsrequired}});
-        return res.json({
-            sucess:true,
-            message:'success',
-        });
-       };
-         if(numberOfSheets===sheets && extratabletsrequired===extraTablets){
+            });
+            };
+            if(extratabletsrequired>extraTablets){
+                await  Drug.updateOne({drug:drugrequired},{$set:{sheet:(sheets-numberOfSheets)-1}});
+                await Drug.updateOne({drug:drugrequired},{$set:{extraTablet:fixed-(extratabletsrequired-extraTablets)}});
+                return res.json({
+                    success:true,
+                    message:"success",
+                });  
+            };
+            if(extratabletsrequired===extraTablets){
+                await  Drug.updateOne({drug:drugrequired},{$set:{sheet:(sheets-numberOfSheets)}});
+                await Drug.updateOne({drug:drugrequired},{$set:{extraTablet:extraTablets-extratabletsrequired}});
+                return res.json({
+                    sucess:true,
+                    message:'success',
+                }); 
+            }
+         };
+         if(numberOfSheets===sheets){
+            if(extratabletsrequired===extraTablets){
                 await Drug.updateOne({drug:drugrequired},{$set:{sheet:0}});
                 await Drug.updateOne({drug:drugrequired},{$set:{extraTablet:0}});
                 return res.json({
                     success:true,
                     message:"success",
-                })
+                });
             };
-         if(numberOfSheets===sheets && extratabletsrequired>extraTablets){
+            if(extratabletsrequired>extraTablets){
             return res.json({
                 success:false,
                 message:`${sheets} are there`,
-            })
+            });
         };
-        if(numberOfSheets===sheets && extratabletsrequired<extraTablets){
+          if(extratabletsrequired<extraTablets){
             await Drug.updateOne({drug:drugrequired},{$set:{sheet:0}});
             await Drug.updateOne({drug:drugrequired},{$set:{extraTablet:(extraTablets-extratabletsrequired)}});
             return res.json({
                 success:true,
                 message:"ha",
-            })
+            });
+          };
         };
 });
 app.put("/update",async(req,res)=>{
